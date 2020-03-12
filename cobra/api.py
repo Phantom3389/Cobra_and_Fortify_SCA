@@ -47,7 +47,6 @@ except ImportError:
     from urllib import quote_plus
 
 q = queue.Queue()
-q1 = queue.Queue()
 app = Flask(__name__, static_folder='templates/asset')
 running_host = '0.0.0.0'
 running_port = 5000
@@ -213,6 +212,8 @@ class JobStatus(Resource):
                         'branch': branch,
                     })
                     s_sid_file = os.path.join(running_path, '{sid}_data'.format(sid=s_sid))
+                    if os.path.exists(s_sid_file) is not True:
+                        continue
                     with open(s_sid_file, 'r') as f:
                         s_sid_data = json.load(f)
                         if s_sid_data.get('code') != 1001:
@@ -671,6 +672,8 @@ def summary():
                     'branch': branch,
                 })
                 s_sid_file = os.path.join(running_path, '{sid}_data'.format(sid=s_sid))
+                if os.path.exists(s_sid_file) is not True:
+                    continue
                 with open(s_sid_file, 'r') as f:
                     s_sid_data = json.load(f)
                     if s_sid_data.get('code') != 1001:

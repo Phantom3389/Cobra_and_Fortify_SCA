@@ -135,7 +135,7 @@ class Running:
             filename = os.path.join(filename, _dir)
         if os.path.exists(filename):
             if is_text(filename):
-                with open(filename, 'r') as f:
+                with open(filename, 'r', errors="surrogateescape") as f:
                     file_content = f.read()
             else:
                 file_content = 'This is a binary file.'

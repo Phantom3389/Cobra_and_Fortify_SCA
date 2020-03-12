@@ -22,7 +22,7 @@ level_dict = {
     "Low": "1",
     "Medium": "4",
     "High": "7",
-    "critical": "10"
+    "Critical": "10"
 }
 
 
@@ -45,7 +45,7 @@ def fortify_scan(target_directory, a_sid=None, s_sid=None, special_rules=None, l
     fortify_fpr = os.path.join(report_path, '{s_sid}.fpr'.format(s_sid=s_sid))
     fortify_xml = os.path.join(report_path, '{s_sid}.xml'.format(s_sid=s_sid))
     del_fpr = 'sourceanalyzer -b ' + s_sid + ' -clean'
-    build = 'sourceanalyzer  -b ' + s_sid + ' -Xmx1200M -Xms600M -Xss24M     -source 1.8 -machine-output   ' + source_path
+    build = 'sourceanalyzer  -b ' + s_sid + ' -Xmx3000M -Xms600M -Xss24M     -source 1.8 -machine-output   ' + source_path
     scan = 'sourceanalyzer  -b ' + s_sid + ' -scan  -format fpr -f ' + fortify_fpr + ' -machine-output '
     report = 'ReportGenerator  -format xml -f ' + fortify_xml + ' -source ' + fortify_fpr + ' -template DeveloperWorkbook.xml'
     subprocess.check_call(del_fpr, shell=True)
