@@ -64,9 +64,12 @@ def consumer():
         p.join()
         p1 = multiprocessing.Process(target=fortify_engine.start, args=task)
         p1.start()
-        p1.join()
+        p1.join(1200)
+        if p1.is_alive():
+            p1.terminate()
+            print(task,"Process Timeout, be Terminated !!!")
+            p1.join()
         q.task_done()
-
 
 
 class AddJob(Resource):
@@ -102,7 +105,6 @@ class AddJob(Resource):
             is_del = True
         else:
             is_del = False
-
 
         # Report All Id
         if not a_sid or a_sid == '':
@@ -192,7 +194,7 @@ class JobStatus(Resource):
                     if Running(s_sid).is_file(True) is False:
                         result['still_running'].update({s_sid: git})
                         ret = False
-                if ret:
+                if ret and r_data.get('total_target_num') == len(r_data['sids']):
                     result['status'] = 'done'
                     running.status(result)
             elif result['status'] == 'done':
@@ -253,7 +255,8 @@ class JobStatus(Resource):
                     'low': low_vul_number
                 },
                 'allow_deploy': allow_deploy,
-                'not_finished': int(r_data.get('total_target_num')) - len(r_data.get('sids')) + len(result.get('still_running')),
+                'not_finished': int(r_data.get('total_target_num')) - len(r_data.get('sids')) + len(
+                    result.get('still_running')),
             }
         return {"code": 1001, "result": data}
 
@@ -437,7 +440,8 @@ class Search(Resource):
 
 class GetMemeber(Resource):
     parser = reqparse.RequestParser()
-    parser.add_argument('repo-url', type=str, required=True, help='repo-url 不能为空，格式为 http://xxx.xxx.com/user/reponame.git')
+    parser.add_argument('repo-url', type=str, required=True,
+                        help='repo-url 不能为空，格式为 http://xxx.xxx.com/user/reponame.git')
 
     def get(self):
         """
@@ -805,7 +809,7 @@ def start(host, port, debug):
 
     # consumer
     threads = []
-    for i in range(3):
+    for i in range(4):
         threads.append(threading.Thread(target=consumer, args=()))
 
     for i in threads:
