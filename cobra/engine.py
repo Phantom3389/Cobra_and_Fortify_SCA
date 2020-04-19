@@ -41,21 +41,21 @@ class Running:
         :return:
         """
         file_path = os.path.join(running_path, '{sid}_list'.format(sid=self.sid))
-        if not os.path.exists(file_path):
-            if isinstance(data, list):
-                with open(file_path, 'w') as f:
-                    fcntl.flock(f, fcntl.LOCK_EX)
-                    f.write(json.dumps({
-                        'sids': {},
-                        'total_target_num': len(data) * 2,
-                    }))
-            else:
-                with open(file_path, 'w') as f:
-                    fcntl.flock(f, fcntl.LOCK_EX)
-                    f.write(json.dumps({
-                        'sids': {},
-                        'total_target_num': 2,
-                    }))
+        # if not os.path.exists(file_path):
+        if isinstance(data, list):
+            with open(file_path, 'w') as f:
+                fcntl.flock(f, fcntl.LOCK_EX)
+                f.write(json.dumps({
+                    'sids': {},
+                    'total_target_num': len(data) * 2,
+                }))
+        else:
+            with open(file_path, 'w') as f:
+                fcntl.flock(f, fcntl.LOCK_EX)
+                f.write(json.dumps({
+                    'sids': {},
+                    'total_target_num': 2,
+                }))
 
     def list(self, data=None):
         """
@@ -105,7 +105,8 @@ class Running:
         else:
             len_vul = len(data['result']['vulnerabilities'])
             for i in range(len_vul):
-                data['result']['vulnerabilities'][i]['code_content'] = self.get_vulnerable_file_content(data['result']['target_directory'], data['result']['vulnerabilities'][i]['file_path'])
+                data['result']['vulnerabilities'][i]['code_content'] = self.get_vulnerable_file_content(
+                    data['result']['target_directory'], data['result']['vulnerabilities'][i]['file_path'])
             data = json.dumps(data, sort_keys=True)
             with open(file_path, 'w+') as f:
                 fcntl.flock(f, fcntl.LOCK_EX)
@@ -171,6 +172,7 @@ def scan_single(target_directory, single_rule):
         return SingleRule(target_directory, single_rule).process()
     except Exception:
         raise
+
 
 def is_text(fn):
     msg = subprocess.Popen(['file', fn], stdout=subprocess.PIPE).communicate()[0]
@@ -276,7 +278,9 @@ def scan(target_directory, a_sid=None, s_sid=None, special_rules=None, language=
     if vn == 0:
         logger.info('[SCAN] Not found vulnerability!')
     else:
-        logger.info("[SCAN] Trigger Rules/Not Trigger Rules/Off Rules: {tr}/{ntr}/{fr} Vulnerabilities ({vn})\r\n{table}".format(tr=len(trigger_rules), ntr=len(diff_rules), fr=off_rules, vn=len(find_vulnerabilities), table=table))
+        logger.info(
+            "[SCAN] Trigger Rules/Not Trigger Rules/Off Rules: {tr}/{ntr}/{fr} Vulnerabilities ({vn})\r\n{table}".format(
+                tr=len(trigger_rules), ntr=len(diff_rules), fr=off_rules, vn=len(find_vulnerabilities), table=table))
         if len(diff_rules) > 0:
             logger.info('[SCAN] Not Trigger Rules ({l}): {r}'.format(l=len(diff_rules), r=','.join(diff_rules)))
 
@@ -327,7 +331,8 @@ class SingleRule(object):
             param = [self.find, self.target_directory, "-type", "f"] + filters
         else:
             # grep
-            if self.sr['match-mode'] == const.mm_regex_only_match or self.sr['match-mode'] == const.mm_regex_param_controllable:
+            if self.sr['match-mode'] == const.mm_regex_only_match or self.sr[
+                'match-mode'] == const.mm_regex_param_controllable:
                 match = self.sr['match']
             elif self.sr['match-mode'] == const.mm_function_param_controllable:
                 # param controllable
@@ -389,7 +394,8 @@ class SingleRule(object):
                 continue
             is_test = False
             try:
-                is_vulnerability, reason = Core(self.target_directory, vulnerability, self.sr, 'project name', ['whitelist1', 'whitelist2'], test=is_test, index=index).scan()
+                is_vulnerability, reason = Core(self.target_directory, vulnerability, self.sr, 'project name',
+                                                ['whitelist1', 'whitelist2'], test=is_test, index=index).scan()
                 if is_vulnerability:
                     logger.debug('[CVI-{cvi}] [RET] Found {code}'.format(cvi=self.sr['id'], code=reason))
                     vulnerability.analysis = reason
@@ -402,7 +408,8 @@ class SingleRule(object):
                     logger.debug('Not vulnerability: {code}'.format(code=reason))
             except Exception:
                 raise
-        logger.debug('[CVI-{cvi}] {vn} Vulnerabilities: {count}'.format(cvi=self.sr['id'], vn=self.sr['name'], count=len(self.rule_vulnerabilities)))
+        logger.debug('[CVI-{cvi}] {vn} Vulnerabilities: {count}'.format(cvi=self.sr['id'], vn=self.sr['name'],
+                                                                        count=len(self.rule_vulnerabilities)))
         return self.rule_vulnerabilities
 
     def parse_match(self, single_match):
@@ -452,7 +459,8 @@ class SingleRule(object):
 
 
 class Core(object):
-    def __init__(self, target_directory, vulnerability_result, single_rule, project_name, white_list, test=False, index=None):
+    def __init__(self, target_directory, vulnerability_result, single_rule, project_name, white_list, test=False,
+                 index=None):
         """
         Initialize
         :param: target_directory:
@@ -681,7 +689,8 @@ class Core(object):
             logger.debug('[CVI-{cvi}] match-mode {mm}'.format(cvi=self.cvi, mm=self.rule_match_mode))
             if self.file_path[-3:].lower() == 'php':
                 try:
-                    ast = CAST(self.rule_match, self.target_directory, self.file_path, self.line_number, self.code_content)
+                    ast = CAST(self.rule_match, self.target_directory, self.file_path, self.line_number,
+                               self.code_content)
                     rule_repair = []
                     if self.rule_match_mode == const.mm_function_param_controllable:
                         rule_match = self.rule_match.strip('()').split('|')  # 漏洞规则整理为列表
@@ -708,7 +717,9 @@ class Core(object):
 
                                     logger.debug('[AST] [CODE] {code}'.format(code=result[0]['code']))
                                 else:
-                                    logger.debug('[AST] Parser failed / vulnerability parameter is not controllable {r}'.format(r=result))
+                                    logger.debug(
+                                        '[AST] Parser failed / vulnerability parameter is not controllable {r}'.format(
+                                            r=result))
                         except Exception as e:
                             logger.warning(traceback.format_exc())
                             raise

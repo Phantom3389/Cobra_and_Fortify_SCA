@@ -54,7 +54,7 @@ def start(target, formatter, output, special_rules, a_sid=None, is_del=False):
     s_sid = get_sid(target)
     r = Running(a_sid)
     data = (s_sid, "[Cobra]" + target)
-    r.init_list(data=target)
+    # r.init_list(data=target)
     r.list(data)
 
     report = '?sid={a_sid}'.format(a_sid=a_sid)
