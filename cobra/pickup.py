@@ -329,10 +329,11 @@ class Git(object):
     repo_branch = None
     repo_author = None
     repo_name = None
+    commit_id = None
 
     # https://github.com/<username>/<reponame>
 
-    def __init__(self, repo_address, branch='master', username=None, password=None):
+    def __init__(self, repo_address, branch='master', commit_id=None, username=None, password=None):
 
         # get upload directory
         self.upload_directory = source_path
@@ -343,6 +344,7 @@ class Git(object):
         self.repo_username = username
         self.repo_password = password
         self.repo_branch = branch
+        self.commit_id = commit_id
         repo_user = self.repo_address.split('/')[-2]
         repo_name = self.repo_address.split('/')[-1].replace('.git', '')
         self.repo_author = repo_user
@@ -362,7 +364,7 @@ class Git(object):
         logger.debug('[PICKUP] cd directory: {0}'.format(repo_dir))
         os.chdir(repo_dir)
 
-        if not self.checkout(self.repo_branch):
+        if not self.checkout(self.repo_branch, self.commit_id):
             os.chdir(repo_dir)
             return False, "Checkout failed."
 
@@ -428,9 +430,9 @@ class Git(object):
 
         self.parse_err(clone_err)
 
-        logger.info('[PICKUP] [CLONE] clone done. Switching to branch ' + self.repo_branch)
+        logger.info('[PICKUP] [CLONE] clone done. Switching to branch ' + self.repo_branch + " [" + self.commit_id + "]")
         # check out to special branch
-        if self.checkout(self.repo_branch):
+        if self.checkout(self.repo_branch, self.commit_id):
             return True, None
         else:
             return False, clone_err
@@ -469,7 +471,7 @@ class Git(object):
         else:
             return self.__parse_diff_result(diff_out)
 
-    def checkout(self, branch):
+    def checkout(self, branch, commit_id):
         """
         Checkout to special branch.
         :param branch: branch name
@@ -483,7 +485,8 @@ class Git(object):
         current_dir = os.getcwd()
         os.chdir(self.repo_directory)
 
-        cmd = "git fetch origin && git reset --hard origin/{branch} && git checkout {branch}".format(branch=branch)
+        cmd = "git fetch origin && git reset --hard origin/{branch} && git checkout {branch} " \
+              "&& git checkout -f {commit_id}".format(branch=branch, commit_id=commit_id)
         p = subprocess.Popen(cmd, shell=True, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
         (checkout_out, checkout_err) = p.communicate()
 

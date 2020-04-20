@@ -83,6 +83,7 @@ class AddJob(Resource):
         formatter = data.get("formatter")
         output = data.get("output")
         rule = data.get("rule")
+        commit_id = data.get("commit_id", '')
         is_del = data.get("dels")
 
         is_valid_key = key_verify(data=data)
@@ -106,6 +107,9 @@ class AddJob(Resource):
         else:
             is_del = False
 
+        if commit_id != '' and bool(1-is_del):
+            return {"code": 1002, "msg": "commit_id is exited, the is_del must be True"}
+
         # Report All Id
         if not a_sid or a_sid == '':
             a_sid = get_sid(target, True)
@@ -127,7 +131,7 @@ class AddJob(Resource):
             for t in target:
                 # Scan
                 if re.match(r'http://|https://', t):
-                    arg = (t, formatter, output, rule, a_sid, is_del)
+                    arg = (t, formatter, output, rule, commit_id, a_sid, is_del)
                     producer(task=arg)
 
                 else:

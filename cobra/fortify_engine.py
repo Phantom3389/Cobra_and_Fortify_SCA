@@ -117,7 +117,7 @@ def fortify_scan(target_directory, a_sid=None, s_sid=None, special_rules=None, l
         })
     return True
 
-def start(target, formatter, output, special_rules, a_sid=None, is_del=False):
+def start(target, formatter, output, special_rules, commit_id, a_sid=None, is_del=False):
     """
     Start CLI
     :param target: File, FOLDER, GIT
@@ -131,7 +131,7 @@ def start(target, formatter, output, special_rules, a_sid=None, is_del=False):
     # generate single scan id
     s_sid = get_sid(target)
     r = Running(a_sid)
-    data = (s_sid, "[Fortify SCA]" + target)
+    data = (s_sid, "[Fortify SCA]" + target + "<" + commit_id[:8] + ">")
     # r.init_list(data=target)
     r.list(data)
 
@@ -148,7 +148,7 @@ def start(target, formatter, output, special_rules, a_sid=None, is_del=False):
 
     # target directory
     try:
-        target_directory = pa.target_directory(target_mode)
+        target_directory = pa.target_directory(target_mode, commit_id)
         target_directory = target_directory.rstrip("/")
         logger.info('[CLI] Target directory: {d}'.format(d=target_directory))
 

@@ -127,7 +127,7 @@ class ParseArgs(object):
         logger.debug('[PARSE-ARGS] Output Mode: {mode}'.format(mode=output_mode))
         return output_mode
 
-    def target_directory(self, target_mode):
+    def target_directory(self, target_mode, commit_id):
         reg = '^(https?):\/\/[\w\-]+(\.[\w\-:]+)+([\w\-\.?\/]+)?$'
         target_directory = None
         if target_mode == TARGET_MODE_GIT:
@@ -163,7 +163,7 @@ class ParseArgs(object):
             else:
                 username = None
                 password = None
-            gg = Git(repo_address=target, branch=branch, username=username, password=password)
+            gg = Git(repo_address=target, branch=branch, commit_id=commit_id, username=username, password=password)
 
             # Git Clone Error
             try:
