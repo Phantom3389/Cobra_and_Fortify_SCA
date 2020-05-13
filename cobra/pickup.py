@@ -350,7 +350,7 @@ class Git(object):
         self.repo_author = repo_user
         self.repo_name = repo_name
 
-        self.repo_directory = os.path.join(os.path.join(os.path.join(self.upload_directory, repo_user), repo_name), branch)
+        self.repo_directory = os.path.join(os.path.join(os.path.join(os.path.join(self.upload_directory, repo_user), repo_name), branch), commit_id)
 
     def pull(self):
         """Pull a repo from repo_address and repo_directory"""
