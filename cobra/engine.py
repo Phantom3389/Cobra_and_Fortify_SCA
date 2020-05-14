@@ -264,7 +264,7 @@ def scan(target_directory, a_sid=None, s_sid=None, special_rules=None, language=
         else:
             cvn = 'Unknown'
         try:
-            print(x.code_content.strip())
+            # print(x.code_content.strip())
             code_content = x.code_content[:50].strip()
         except AttributeError as e:
             code_content = x.code_content.decode('utf-8')[:100].strip()
