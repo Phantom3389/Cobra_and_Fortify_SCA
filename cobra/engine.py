@@ -103,10 +103,11 @@ class Running:
                 result = f.readline()
             return json.loads(result)
         else:
-            len_vul = len(data['result']['vulnerabilities'])
-            for i in range(len_vul):
-                data['result']['vulnerabilities'][i]['code_content'] = self.get_vulnerable_file_content(
-                    data['result']['target_directory'], data['result']['vulnerabilities'][i]['file_path'])
+            if "result" in data.keys():
+                len_vul = len(data['result']['vulnerabilities'])
+                for i in range(len_vul):
+                    data['result']['vulnerabilities'][i]['code_content'] = self.get_vulnerable_file_content(
+                        data['result']['target_directory'], data['result']['vulnerabilities'][i]['file_path'])
             data = json.dumps(data, sort_keys=True)
             with open(file_path, 'w+') as f:
                 fcntl.flock(f, fcntl.LOCK_EX)

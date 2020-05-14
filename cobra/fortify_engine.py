@@ -9,6 +9,7 @@ from .config import report_path
 import xml.dom.minidom
 import os
 import subprocess
+import signal
 from .utils import md5, random_generator, clean_dir
 from .engine import Running
 from .log import logger
@@ -17,13 +18,26 @@ from .pickup import Directory
 from .detection import Detection
 from .exceptions import PickupException
 
-
 level_dict = {
     "Low": "1",
     "Medium": "4",
     "High": "7",
     "Critical": "10"
 }
+
+s_sid = 0
+
+
+def myhandler(signum, frame):
+    """ 进程超时关闭处理 """
+    global s_sid
+    result = {
+        'code': 1002,
+        'msg': 'Fortify Scan Process Timeout, be Terminated !'
+    }
+    Running(s_sid).data(result)
+    logger.critical('Fortify Scan Process Timeout, be Terminated !')
+    exit()
 
 
 def get_sid(target, is_a_sid=False):
@@ -38,8 +52,10 @@ def get_sid(target, is_a_sid=False):
     sid = '{p}{sid}{r}'.format(p=pre, sid=sid, r=random_generator())
     return sid.lower()
 
-def fortify_scan(target_directory, a_sid=None, s_sid=None, special_rules=None, language=None, framework=None, file_count=0,
-         extension_count=0):
+
+def fortify_scan(target_directory, a_sid=None, s_sid=None, special_rules=None, language=None, framework=None,
+                 file_count=0,
+                 extension_count=0):
     # fortify 运行的代码
     source_path = target_directory
     fortify_fpr = os.path.join(report_path, '{s_sid}.fpr'.format(s_sid=s_sid))
@@ -76,8 +92,6 @@ def fortify_scan(target_directory, a_sid=None, s_sid=None, special_rules=None, l
             FilePath = GroupingSection.getElementsByTagName("FilePath")[i].childNodes[0].nodeValue  # 文件路径
             LineStart = GroupingSection.getElementsByTagName("LineStart")[i].childNodes[0].nodeValue  # 影响行
             Snippet = GroupingSection.getElementsByTagName("Snippet")[i].childNodes[0].nodeValue  # 影响代码
-
-
 
             data = {
                 "analysis": groupTitle,
@@ -117,6 +131,7 @@ def fortify_scan(target_directory, a_sid=None, s_sid=None, special_rules=None, l
         })
     return True
 
+
 def start(target, formatter, output, special_rules, commit_id, a_sid=None, is_del=False):
     """
     Start CLI
@@ -129,6 +144,9 @@ def start(target, formatter, output, special_rules, commit_id, a_sid=None, is_de
     :return:
     """
     # generate single scan id
+    global s_sid
+    # 接受程序terminate关闭信号并处理
+    signal.signal(signal.SIGTERM, myhandler)
     s_sid = get_sid(target)
     r = Running(a_sid)
     data = (s_sid, "[Fortify SCA]" + target + "<" + commit_id[:8] + ">")
@@ -169,7 +187,8 @@ def start(target, formatter, output, special_rules, commit_id, a_sid=None, is_de
             logger.info('[CLI] [SPECIAL-RULE] only scan used by {r}'.format(r=','.join(pa.special_rules)))
         # scan
         fortify_scan(target_directory=target_directory, a_sid=a_sid, s_sid=s_sid, special_rules=pa.special_rules,
-             language=main_language, framework=main_framework, file_count=file_count, extension_count=len(files))
+                     language=main_language, framework=main_framework, file_count=file_count,
+                     extension_count=len(files))
 
         if target_mode == 'git' and '/tmp/cobra/git/' in target_directory and is_del is True:
             res = clean_dir(target_directory)

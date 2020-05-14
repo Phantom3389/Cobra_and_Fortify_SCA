@@ -67,7 +67,6 @@ def consumer():
         p1.join(1200)
         if p1.is_alive():
             p1.terminate()
-            print(task,"Process Timeout, be Terminated !!!")
             p1.join()
         q.task_done()
 
@@ -188,6 +187,8 @@ class JobStatus(Resource):
             return data
         else:
             result = running.status()
+            msg = 'success'
+            not_finished = 0
             r_data = running.list()
             allow_deploy = True
             total_vul_number = critical_vul_number = high_vul_number = medium_vul_number = low_vul_number = 0
@@ -201,7 +202,7 @@ class JobStatus(Resource):
                 if ret and r_data.get('total_target_num') == len(r_data['sids']):
                     result['status'] = 'done'
                     running.status(result)
-            elif result['status'] == 'done':
+            elif result['status'] == 'done' or result['status'] == 'fail':
                 # 统计各类漏洞数量，并给出上线风险评估
                 targets = list()
 
@@ -223,6 +224,10 @@ class JobStatus(Resource):
                     with open(s_sid_file, 'r') as f:
                         s_sid_data = json.load(f)
                         if s_sid_data.get('code') != 1001:
+                            not_finished += 1
+                            result['status'] = 'fail'
+                            running.status(result)
+                            msg = s_sid_data.get('msg')
                             continue
                         else:
                             s_sid_data = s_sid_data.get('result')
@@ -246,7 +251,7 @@ class JobStatus(Resource):
                     allow_deploy = False
 
             data = {
-                'msg': 'success',
+                'msg': msg,
                 'sid': sid,
                 'status': result.get('status'),
                 'report': request.url_root + result.get('report'),
@@ -260,7 +265,7 @@ class JobStatus(Resource):
                 },
                 'allow_deploy': allow_deploy,
                 'not_finished': int(r_data.get('total_target_num')) - len(r_data.get('sids')) + len(
-                    result.get('still_running')),
+                    result.get('still_running')) + not_finished,
             }
         return {"code": 1001, "result": data}
 
