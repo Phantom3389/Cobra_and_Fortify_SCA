@@ -818,7 +818,7 @@ def start(host, port, debug):
 
     # consumer
     threads = []
-    for i in range(4):
+    for i in range(8):
         threads.append(threading.Thread(target=consumer, args=()))
 
     for i in threads:
