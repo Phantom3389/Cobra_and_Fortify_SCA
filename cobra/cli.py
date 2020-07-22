@@ -93,7 +93,7 @@ def start(target, formatter, output, special_rules, commit_id, a_sid=None, is_de
         scan(target_directory=target_directory, a_sid=a_sid, s_sid=s_sid, special_rules=pa.special_rules,
              language=main_language, framework=main_framework, file_count=file_count, extension_count=len(files))
 
-        if target_mode == 'git' and '/tmp/cobra/git/' in target_directory and is_del is True:
+        if target_mode == 'git' and '/data/cobra/git/' in target_directory and is_del is True:
             res = clean_dir(target_directory)
             if res is True:
                 logger.info('[CLI] Target directory remove success')
